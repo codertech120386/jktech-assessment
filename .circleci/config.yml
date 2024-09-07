@@ -1,0 +1,86 @@
+version: 2.1 # 2.1 config required to use orbs
+
+orbs:
+  aws-ecr: circleci/aws-ecr@8.2.1 # use the AWS ECR orb
+  aws-ecs: circleci/aws-ecs@3.2.0 # use the AWS ECS orb
+  aws-cli: circleci/aws-cli@3.1.4 # use the AWS CLI orb
+
+aliases:
+  - &show-current-branch-name
+    run:
+      name: Show current branch
+      command: echo ${CIRCLE_BRANCH}
+jobs:
+  verify-production-deployment:
+    executor: aws-cli/default
+    steps:
+      - aws-cli/install
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY
+          aws-region: AWS_REGION
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+      - run:
+          name: Get last task definition
+          command: |
+            TASK_DEFINITION_ARN=$(aws ecs describe-task-definition \
+                 --task-definition ${MY_APP_PREFIX_PROD} \
+                 --output text \
+                 --query 'taskDefinition.taskDefinitionArn')
+             echo "export TASK_DEFINITION_ARN='${TASK_DEFINITION_ARN}'" >> "$BASH_ENV"
+      - aws-ecs/verify-revision-is-deployed:
+          family: "${MY_APP_PREFIX_PROD}"
+          cluster: "${MY_APP_PREFIX_PROD}"
+          task-definition-arn: "${TASK_DEFINITION_ARN}"
+
+workflows:
+  Production-deployment:
+    jobs:
+      - aws-ecr/build-and-push-image: # orb built-in job
+          executor:
+            name: aws-ecr/default
+            image: ubuntu-2004:2022.10.1
+            resource-class: large
+            use-docker-layer-caching: true
+          repo: "${MY_APP_PREFIX_PROD}"
+          aws-access-key-id: AWS_ACCESS_KEY
+          aws-cli-version: latest
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          region: ${AWS_REGION}
+          registry-id: AWS_ECR_REGISTRY_ID
+          create-repo: true
+          dockerfile: "Dockerfile"
+          tag: "latest"
+          context:
+            - aws-ecs
+            - aws-circleci
+            - db
+          filters:
+            branches:
+              only:
+                - main
+
+      - aws-ecs/deploy-service-update: # orb built-in job
+          requires:
+            - aws-ecr/build-and-push-image
+          family: "${MY_APP_PREFIX_PROD}"
+          cluster: "${MY_APP_PREFIX_PROD}"
+          aws-access-key-id: AWS_ACCESS_KEY
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          container-image-name-updates: "container=${MY_APP_PREFIX_PROD},tag=latest"
+          context:
+            - aws-ecs
+            - aws-circleci
+          filters:
+            branches:
+              only:
+                - main
+      - verify-production-deployment:
+          requires:
+            - aws-ecs/deploy-service-update
+          context:
+            - aws-ecs
+            - aws-circleci
+          filters:
+            branches:
+              only:
+                - main
