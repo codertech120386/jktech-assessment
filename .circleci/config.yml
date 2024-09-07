@@ -388,7 +388,6 @@ workflows:
           context:
             - aws-ecs
             - aws-circleci
-            - db
           filters:
             branches:
               only:
