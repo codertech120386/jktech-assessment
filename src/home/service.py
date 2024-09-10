@@ -2,15 +2,15 @@ from fastapi import HTTPException, status
 import pandas as pd
 from icecream import ic
 
-from src.utils import read_pickle_files_from_s3
+from src.utils import read_pickle_files_from_s3, convert_file_content_to_df
 
 
 def machine_learning_recommendations(rating: int, genre: str):
     try:
         genre_list = ['Fantasy', 'Science Fiction', 'Romance', 'Mystery', 'Horror']
         genre_dict = {i: index + 1 for index, i in enumerate(genre_list)}
-
-        df = pd.read_csv("books_data.csv")
+        
+        df = convert_file_content_to_df(file_name="books_data.csv")
         loaded_model_knn = read_pickle_files_from_s3(file_name="knn_model.pkl")
         loaded_scaler = read_pickle_files_from_s3(file_name="scaler.pkl")
 

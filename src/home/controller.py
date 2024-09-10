@@ -19,6 +19,8 @@ def run_ollama(model: str, prompt: str):
 
     if result.returncode == 0:
         return result.stdout
+    else:
+        ic("something went wrong in llama")
 
 
 def generate_summary_using_llama3(content: str):
