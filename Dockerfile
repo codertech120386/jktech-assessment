@@ -1,4 +1,4 @@
-FROM kiddodhaval060/ubuntu2204_python_ollama_llama3
+FROM kiddodhaval060/ubuntu2204_python_ollama_llama3_x86
 
 WORKDIR /app
 
