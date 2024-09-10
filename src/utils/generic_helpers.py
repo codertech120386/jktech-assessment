@@ -1,4 +1,4 @@
-from fastapi import Request
+from fastapi import Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import re
@@ -40,3 +40,10 @@ def check_email(email):
         return True
 
     return False
+
+
+def errors_response(errors: any):
+    errors_string = "\n".join(errors)
+    return generic_response(
+        {"message": f"Please check below errors and fix them \n {errors_string}",
+            "status_code": status.HTTP_400_BAD_REQUEST})

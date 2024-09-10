@@ -1,12 +1,12 @@
 from pydantic import BaseModel
-from typing import Optional
 
 
-class CreateBookSchema(BaseModel):
+class CreateOrUpdateBookSchema(BaseModel):
     title: str
     author: str
     genre: str
     year_published: int
+    summary: str
 
     class Config:
         json_schema_extra = {
@@ -15,25 +15,7 @@ class CreateBookSchema(BaseModel):
                 "author": "Dhaval Chheda",
                 "genre": "AI Tech",
                 "year_published": 2024,
-            }
-        }
-
-
-class UpdateBookSchema(BaseModel):
-    title: str
-    author: str
-    genre: str
-    year_published: int
-    summary: Optional[str] = None
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "title": "My first book",
-                "author": "Dhaval Chheda",
-                "genre": "AI Tech",
-                "year_published": 2024,
-                "summary": "This is the summary of the book"
+                "summary": "This is a sample summary. This is a sample summary. This is a sample summary.This is a sample summary. This is a sample summary. This is a sample summary.This is a sample summary. This is a sample summary. This is a sample summary.This is a sample summary. This is a sample summary. This is a sample summary.This is a sample summary. This is a sample summary. This is a sample summary",
             }
         }
 

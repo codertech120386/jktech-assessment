@@ -2,3 +2,8 @@
 .env
 Problem Statement.docx
 __pycache__
+
+Dockerfile.prod
+books_dummy_data.csv
+books_data.csv
+test.db

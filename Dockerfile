@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM kiddodhaval060/ubuntu2204_python_ollama_llama3
 
 WORKDIR /app
 
@@ -8,4 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 80
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+COPY ./project_script.sh /project_script.sh
+RUN chmod +x /project_script.sh
+
+CMD ["/project_script.sh"]

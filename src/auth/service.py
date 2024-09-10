@@ -1,11 +1,17 @@
 from fastapi import HTTPException, status
+from icecream import ic
 
 from src.auth.models import User
 
 
 def check_user_with_email_exists(session, email: str):
-    return session.query(User).filter(
-        User.email == email).first()
+    try:
+        return session.query(User).filter(
+            User.email == email).first()
+    except Exception as e:
+        ic(e)
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Something went wrong .. please try again later.")
 
 
 def add_user(session, user, password):
@@ -22,6 +28,6 @@ def add_user(session, user, password):
 
         return new_user
     except Exception as e:
-        print(e)
+        ic(e)
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail="Something went wrong .. please try again later.")

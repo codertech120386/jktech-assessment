@@ -1,12 +1,16 @@
-from fastapi import APIRouter, Depends
+import asyncio
+
+from fastapi import APIRouter, Depends, BackgroundTasks, status
 from fastapi.security import HTTPBearer
+from icecream import ic
 
 from database import SessionLocal, get_db
-from src.utils import verify_token
+from src.utils import verify_token, generic_response
 
-from .schema import CreateBookSchema, UpdateBookSchema, CreateReviewSchema
+from .schema import CreateOrUpdateBookSchema, CreateReviewSchema
 from .controller import add_book, update_book, delete_book, fetch_books, fetch_book_by_id, fetch_reviews_by_book_id, \
-    fetch_book_summary_and_aggregate_ratings_by_id, add_review_for_book_by_id
+    fetch_book_summary_and_aggregate_ratings_by_id, add_review_for_book_by_id, \
+    get_all_books_with_average_ratings, train_model_for_reco
 
 auth_scheme = HTTPBearer()
 
@@ -18,13 +22,13 @@ books_router = APIRouter(
 
 
 @books_router.post('/')
-def create_book(book: CreateBookSchema, session: SessionLocal = Depends(get_db), token=Depends(auth_scheme),
+def create_book(book: CreateOrUpdateBookSchema, session: SessionLocal = Depends(get_db), token=Depends(auth_scheme),
                 user_data=Depends(verify_token)):
-    return add_book(book, session)
+    return add_book(book=book, session=session)
 
 
 @books_router.patch('/{book_id}')
-def edit_book(book_id: int, book: UpdateBookSchema, session: SessionLocal = Depends(get_db),
+def edit_book(book_id: int, book: CreateOrUpdateBookSchema, session: SessionLocal = Depends(get_db),
               token=Depends(auth_scheme), user_data=Depends(verify_token)):
     return update_book(book_id=book_id, book=book, session=session)
 
@@ -33,6 +37,19 @@ def edit_book(book_id: int, book: UpdateBookSchema, session: SessionLocal = Depe
 def remove_book(book_id: int, session: SessionLocal = Depends(get_db), token=Depends(auth_scheme),
                 user_data=Depends(verify_token)):
     return delete_book(book_id=book_id, session=session)
+
+
+@books_router.get('/train-model')
+async def train_model(session: SessionLocal = Depends(get_db),
+                      token=Depends(auth_scheme), user_data=Depends(verify_token)):
+    asyncio.create_task(train_model_for_reco(session=session))
+    return generic_response({"data": "Task is processing in background", "status_code": status.HTTP_201_CREATED})
+
+
+@books_router.get('/all-books-with-average-ratings')
+def books_with_avg_ratings(session: SessionLocal = Depends(get_db),
+                           token=Depends(auth_scheme), user_data=Depends(verify_token)):
+    return get_all_books_with_average_ratings(session=session)
 
 
 @books_router.get('/')

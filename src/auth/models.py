@@ -7,12 +7,9 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(30))
-    email = Column(String(50))
-    # I don't think creating enum fields is a good idea
-    # as when we add or remove something it leads to alter table and table locks
-    # and I manage by validation in the backend itself
-    password = Column(String(60))
+    name = Column(String(30), nullable=False)
+    email = Column(String(50), nullable=False)
+    password = Column(String(60), nullable=False)
     created = Column(DateTime, default=datetime.utcnow)
     updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
